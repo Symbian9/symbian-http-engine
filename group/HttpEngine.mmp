@@ -1,0 +1,13 @@
+TARGET				HttpEngine.lib
+TARGETTYPE			lib
+
+USERINCLUDE	 		..\inc
+SYSTEMINCLUDE 		\epoc32\include \epoc32\include\http
+
+SOURCEPATH 			..\src
+SOURCE				HttpController.cpp
+SOURCE				HttpHeader.cpp
+SOURCE				MultipartEncoder.cpp
+SOURCE				MultipartField.cpp
+SOURCE				MultipartFieldBase.cpp
+SOURCE				MultipartFieldFile.cpp

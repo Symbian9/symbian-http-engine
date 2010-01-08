@@ -86,7 +86,6 @@ void CMultipartFieldFile::ConstructL( const TDesC8& aFieldName,
 
 TBool CMultipartFieldFile::ReturnNextDataPart( TDes8& aDataPart )
 	{
-	TInt ss(0);
 	if( !iOffset )
 		{
 		TPtrC8 ptr( *iFileName );

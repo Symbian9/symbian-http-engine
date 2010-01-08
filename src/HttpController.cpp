@@ -300,7 +300,6 @@ void CHttpController::ResetPersistentHeaders()
 void CHttpController::ParseHeadersL(RHTTPTransaction& aTransaction)
 	{
 	const TInt KMaxNumericLen = 32;
-	const TInt KMaxDateLen = 50;
 
 	RStringPool stringPool = aTransaction.Session().StringPool();
 	RHTTPHeaders header = aTransaction.Response().GetHeaderCollection();
@@ -339,6 +338,7 @@ void CHttpController::ParseHeadersL(RHTTPTransaction& aTransaction)
 					break;
 					}
 				default:
+					User::Leave( KErrNotSupported );//new field types will be added in future
 					break;
 				}
 			if (!fieldVal8)
@@ -415,7 +415,7 @@ void CHttpController::MHFRunL(RHTTPTransaction aTransaction,
 			MHTTPDataSupplier* body = aTransaction.Response().Body();
 
 			TPtrC8 dataPart;
-			TBool isLastPart = body->GetNextDataPart(dataPart);
+			body->GetNextDataPart(dataPart);
 
 			if (iOutputStream)
 				{
