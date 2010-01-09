@@ -64,10 +64,10 @@ public:
 	//id content encoder is not specyfied then the default CMultipartEncoder is used
 	static CHttpController
 			* NewL( RConnection& aConnection, RSocketServ& aSocketServ,
-					CHttpDataEncoderBase* aContentEncoder = NULL ); //passes ownership
+					CHttpDataEncoderBase* aContentEncoder = NULL ); //passes ownership of aContentEncoder
 	static CHttpController
 			* NewLC( RConnection& aConnection, RSocketServ& aSocketServ,
-					 CHttpDataEncoderBase* aContentEncoder = NULL ); //passes ownership
+					 CHttpDataEncoderBase* aContentEncoder = NULL ); //passes ownership of aContentEncoder
 
 public:
 	void GetL( const TDesC8& aUri, CHttpHeaders* aHeaders = NULL,
@@ -101,8 +101,7 @@ protected:
 	void ParseHeadersL( RHTTPTransaction& aTransaction );
 	HBufC8* HeaderNameLC( TInt aId );
 	
-protected:
-	//from MHTTPTransactionCallback
+protected: //from MHTTPTransactionCallback
 	void MHFRunL( RHTTPTransaction aTransaction, const THTTPEvent& aEvent );
 	TInt MHFRunError( TInt aError, RHTTPTransaction aTransaction,
 					  const THTTPEvent& aEvent );
@@ -113,7 +112,10 @@ private:
 
 	enum THttpState
 		{
-		EHttpNone, EHttpActive, EHttpFinished, EHttpNotified
+		EHttpNone, 
+		EHttpActive, 
+		EHttpFinished, 
+		EHttpNotified
 		};
 
 private:
