@@ -25,7 +25,8 @@
  * 
  * Initial Contributors:
  * Pawe³ Polañski - Initial contribution
- *
+ * Tomasz Polañski
+ * 
  * Contributors:
  *
  * Description:
@@ -41,7 +42,6 @@
 #include "HttpObserver.h"
 #include "MultipartEncoder.h"
 #include "HttpHeader.h"
-
 _LIT8( KUserAgent, "SymbianOS" );
 _LIT8( KContentType, "multipart/form-data; boundary=" KBoundryId );
 _LIT8( KUrlEncodedContentType, "application/x-www-form-urlencoded" );
@@ -50,305 +50,294 @@ _LIT8( KClose, "Close" );
 
 const TInt KMaxMemoryBuffer = 0x10000;
 
-CHttpController::CHttpController(CHttpDataEncoderBase* aContentEncoder) :
-	iOutputEncoder(aContentEncoder)
+CHttpController::CHttpController( MHttpDataEncoderBase* aContentEncoder ) :
+	iOutputEncoder( aContentEncoder )
 	{
 	}
 
-CHttpController::~CHttpController()
+CHttpController::~CHttpController( )
 	{
 	delete iResponseData;
 	delete iOutputEncoder;
-	if (iOutputStream)
+	if ( iOutputStream )
 		{
-		iOutputStream->Close();
+		iOutputStream->Close( );
 		iOutputStream = NULL;
 		}
-	Cancel();
-	iSession.Close();
+	Cancel( );
+	iSession.Close( );
 	delete iPersistentHeaders;
 	}
 
-CHttpController* CHttpController::NewLC(RConnection& aConnection,
-		RSocketServ& aSocketServ, CHttpDataEncoderBase* aContentEncoder)
+CHttpController* CHttpController::NewLC( RConnection& aConnection, RSocketServ& aSocketServ,
+		MHttpDataEncoderBase* aContentEncoder )
 	{
-	CHttpController* self = new (ELeave) CHttpController(aContentEncoder);
-	CleanupStack::PushL(self);
-	self->ConstructL(aConnection, aSocketServ);
+	CHttpController* self = new ( ELeave ) CHttpController( aContentEncoder );
+	CleanupStack::PushL( self );
+	self->ConstructL( aConnection, aSocketServ );
 	return self;
 	}
 
-CHttpController* CHttpController::NewL(RConnection& aConnection,
-		RSocketServ& aSocketServ, CHttpDataEncoderBase* aContentEncoder)
+CHttpController* CHttpController::NewL( RConnection& aConnection, RSocketServ& aSocketServ,
+		MHttpDataEncoderBase* aContentEncoder )
 	{
-	CHttpController* self = CHttpController::NewLC(aConnection, aSocketServ,
-			aContentEncoder);
-	CleanupStack::Pop(self);
+	CHttpController* self = CHttpController::NewLC( aConnection, aSocketServ, aContentEncoder );
+	CleanupStack::Pop( self );
 	return self;
 	}
 
-void CHttpController::ConstructL(RConnection& aConnection,
-		RSocketServ& aSocketServ)
+void CHttpController::ConstructL( RConnection& aConnection, RSocketServ& aSocketServ )
 	{
-	iPersistentHeaders = CHttpHeaders::NewL();
-	iSession.OpenL();
-	RHTTPConnectionInfo connectionInfo = iSession.ConnectionInfo();
-	RStringPool pool = iSession.StringPool();
+	iPersistentHeaders = CHttpHeaders::NewL( );
+	iSession.OpenL( );
+	RHTTPConnectionInfo connectionInfo = iSession.ConnectionInfo( );
+	RStringPool pool = iSession.StringPool( );
 
-	connectionInfo.SetPropertyL(pool.StringF(HTTP::EHttpSocketServ,
-			RHTTPSession::GetTable()), THTTPHdrVal(aSocketServ.Handle()));
+	connectionInfo.SetPropertyL( pool.StringF( HTTP::EHttpSocketServ, RHTTPSession::GetTable( ) ),
+			THTTPHdrVal( aSocketServ.Handle( ) ) );
 
 	TInt connectionPtr = REINTERPRET_CAST(TInt, &aConnection);
-	connectionInfo.SetPropertyL(pool.StringF(HTTP::EHttpSocketConnection,
-			RHTTPSession::GetTable()), THTTPHdrVal(connectionPtr));
-	iSession.FilterCollection().RemoveFilter(iSession.StringPool().StringF(
-			HTTP::ERedirect, RHTTPSession::GetTable()));
-	if (!iOutputEncoder)
-		{//default content encoder
-		iOutputEncoder = CMultipartEncoder::NewL();
+	connectionInfo.SetPropertyL( pool.StringF( HTTP::EHttpSocketConnection,
+			RHTTPSession::GetTable( ) ), THTTPHdrVal( connectionPtr ) );
+	iSession.FilterCollection( ).RemoveFilter( iSession.StringPool( ).StringF( HTTP::ERedirect,
+			RHTTPSession::GetTable( ) ) );
+	if ( !iOutputEncoder )
+		{
+		//default content encoder
+		iOutputEncoder = CMultipartEncoder::NewL( );
 		}
 	}
 
-void CHttpController::SetHeaderL(RHTTPHeaders& aHeaders, TInt aHdrField,
-		const TDesC8& aHdrValue)
+void CHttpController::SetHeaderL( RHTTPHeaders& aHeaders, TInt aHdrField, const TDesC8& aHdrValue )
 	{
-	RStringF valStr = iSession.StringPool().OpenFStringL(aHdrValue);
-	CleanupClosePushL(valStr);
-	THTTPHdrVal val(valStr);
-	aHeaders.SetFieldL(iSession.StringPool().StringF(aHdrField,
-			RHTTPSession::GetTable()), val);
-	CleanupStack::PopAndDestroy(&valStr);
+	RStringF valStr = iSession.StringPool( ).OpenFStringL( aHdrValue );
+	CleanupClosePushL( valStr );
+	THTTPHdrVal val( valStr );
+	aHeaders.SetFieldL( iSession.StringPool( ).StringF( aHdrField, RHTTPSession::GetTable( ) ), val );
+	CleanupStack::PopAndDestroy( &valStr );
 	}
 
-void CHttpController::SetHeaderL(RHTTPHeaders& aHeaders,
-		const TDesC8& aHdrName, const TDesC8& aHdrValue)
+void CHttpController::SetHeaderL( RHTTPHeaders& aHeaders, const TDesC8& aHdrName,
+		const TDesC8& aHdrValue )
 	{
-	RStringF nameStr = iSession.StringPool().OpenFStringL(aHdrName);
-	CleanupClosePushL(nameStr);
-	RStringF valStr = iSession.StringPool().OpenFStringL(aHdrValue);
-	CleanupClosePushL(valStr);
-	THTTPHdrVal val(valStr);
-	aHeaders.SetFieldL(nameStr, val);
-	CleanupStack::PopAndDestroy(2, &nameStr);
+	RStringF nameStr = iSession.StringPool( ).OpenFStringL( aHdrName );
+	CleanupClosePushL( nameStr );
+	RStringF valStr = iSession.StringPool( ).OpenFStringL( aHdrValue );
+	CleanupClosePushL( valStr );
+	THTTPHdrVal val( valStr );
+	aHeaders.SetFieldL( nameStr, val );
+	CleanupStack::PopAndDestroy( 2, &nameStr );
 	}
 
-void CHttpController::Error(TInt aError)
+void CHttpController::Error( TInt aError )
 	{
 	delete iResponseData;
 	iResponseData = NULL;
-	if (iOutputStream)
+	if ( iOutputStream )
 		{
-		iOutputStream->Close();
+		iOutputStream->Close( );
 		iOutputStream = NULL;
 		}
-	if (iState < EHttpNotified)
+	if ( iState < EHttpNotified )
 		{
-		iObserver->Error(aError);
+		iObserver->Error( aError );
 		iState = EHttpNotified;
 		}
 	}
 
-void CHttpController::CloseTransaction(RHTTPTransaction& aTransaction)
+void CHttpController::CloseTransaction( RHTTPTransaction& aTransaction )
 	{
-	aTransaction.Close();
+	aTransaction.Close( );
 	delete iResponseData;
 	iResponseData = NULL;
-	if (iOutputStream)
+	if ( iOutputStream )
 		{
-		iOutputStream->Close();
+		iOutputStream->Close( );
 		iOutputStream = NULL;
 		}
 	iState = EHttpFinished;
 	}
 
-void CHttpController::SendRequestL(TInt aMethodIndex, const TDesC8& aUri)
+void CHttpController::SendRequestL( TInt aMethodIndex, const TDesC8& aUri )
 	{
-	SendRequestL(aMethodIndex, aUri, NULL );
+	SendRequestL( aMethodIndex, aUri, NULL );
 	}
 
-void CHttpController::SendRequestL(TInt aMethodIndex, const TDesC8& aUri,
-		CHttpHeaders* aHeaders)
+void CHttpController::SendRequestL( TInt aMethodIndex, const TDesC8& aUri, CHttpHeaders* aHeaders )
 	{
-	if (!iObserver)
+	if ( !iObserver )
 		{
-		User::Leave(KErrHttpInvalidObserver);
+		User::Leave( KErrHttpInvalidObserver );
 		}
-	RStringF method = iSession.StringPool().StringF(aMethodIndex,
-			RHTTPSession::GetTable());
+	RStringF method = iSession.StringPool( ).StringF( aMethodIndex, RHTTPSession::GetTable( ) );
 
 	TUriParser8 uri;
-	uri.Parse(aUri);
-	iTransaction = iSession.OpenTransactionL(uri, *this, method);
-	RHTTPHeaders hdr = iTransaction.Request().GetHeaderCollection();
+	uri.Parse( aUri );
+	iTransaction = iSession.OpenTransactionL( uri, *this, method );
+	RHTTPHeaders hdr = iTransaction.Request( ).GetHeaderCollection( );
 
-	RArray<TInt> addedElements;
-	CleanupClosePushL(addedElements);
+	RArray< TInt > addedElements;
+	CleanupClosePushL( addedElements );
 
-	HBufC8* headerName = HeaderNameLC(HTTP::EUserAgent);
+	HBufC8* headerName = HeaderNameLC( HTTP::EUserAgent );
 
-	TInt error = iPersistentHeaders->Find(*headerName);
-	SetHeaderL(hdr, *headerName, error >= 0 ? iPersistentHeaders->Value(error)
-			: TPtrC8(KUserAgent));
-	CleanupStack::PopAndDestroy(headerName);
-	if (error >= 0)
+	TInt error = iPersistentHeaders->Find( *headerName );
+	SetHeaderL( hdr, *headerName, error >= 0 ? iPersistentHeaders->Value( error ) : TPtrC8(
+			KUserAgent ) );
+	CleanupStack::PopAndDestroy( headerName );
+	if ( error >= 0 )
 		{
-		addedElements.InsertInOrderL(error);
+		addedElements.InsertInOrderL( error );
 		}
 
-	headerName = HeaderNameLC(HTTP::EConnection);
-	error = iPersistentHeaders->Find(*headerName);
-	SetHeaderL(hdr, *headerName, error >= 0 ? iPersistentHeaders->Value(error)
-			: TPtrC8(KClose));
-	CleanupStack::PopAndDestroy(headerName);
-	if (error >= 0)
+	headerName = HeaderNameLC( HTTP::EConnection );
+	error = iPersistentHeaders->Find( *headerName );
+	SetHeaderL( hdr, *headerName, error >= 0 ? iPersistentHeaders->Value( error ) : TPtrC8( KClose ) );
+	CleanupStack::PopAndDestroy( headerName );
+	if ( error >= 0 )
 		{
-		addedElements.InsertInOrderL(error);
+		addedElements.InsertInOrderL( error );
 		}
 
-	headerName = HeaderNameLC(HTTP::EAccept);
-	error = iPersistentHeaders->Find(*headerName);
-	SetHeaderL(hdr, *headerName, error >= 0 ? iPersistentHeaders->Value(error)
-			: TPtrC8(KAccept));
-	CleanupStack::PopAndDestroy(headerName);
-	if (error >= 0)
+	headerName = HeaderNameLC( HTTP::EAccept );
+	error = iPersistentHeaders->Find( *headerName );
+	SetHeaderL( hdr, *headerName, error >= 0 ? iPersistentHeaders->Value( error )
+			: TPtrC8( KAccept ) );
+	CleanupStack::PopAndDestroy( headerName );
+	if ( error >= 0 )
 		{
-		addedElements.InsertInOrderL(error);
+		addedElements.InsertInOrderL( error );
 		}
 
-	headerName = HeaderNameLC(HTTP::EHost);
-	error = iPersistentHeaders->Find(*headerName);
-	SetHeaderL(hdr, *headerName, error >= 0 ? iPersistentHeaders->Value(error)
-			: TPtrC8(uri.Extract(EUriHost)));
-	CleanupStack::PopAndDestroy(headerName);
-	if (error >= 0)
+	headerName = HeaderNameLC( HTTP::EHost );
+	error = iPersistentHeaders->Find( *headerName );
+	SetHeaderL( hdr, *headerName, error >= 0 ? iPersistentHeaders->Value( error ) : TPtrC8(
+			uri.Extract( EUriHost ) ) );
+	CleanupStack::PopAndDestroy( headerName );
+	if ( error >= 0 )
 		{
-		addedElements.InsertInOrderL(error);
+		addedElements.InsertInOrderL( error );
 		}
 
+	TInt count( iPersistentHeaders->Count( ) );
+	for ( TInt i( 0 ); i < count; ++i )
 		{
-		TInt count(iPersistentHeaders->Count());
-		for (TInt i(0); i < count; ++i)
+		if ( addedElements.FindInOrder( i ) >= 0 )
 			{
-			if (addedElements.FindInOrder(i) >= 0)
-				{
-				continue;
-				}
-			SetHeaderL(hdr, iPersistentHeaders->Key(i),
-					iPersistentHeaders->Value(i));
+			continue;
 			}
+		SetHeaderL( hdr, iPersistentHeaders->Key( i ), iPersistentHeaders->Value( i ) );
 		}
-	CleanupStack::PopAndDestroy(&addedElements);
-	if (aHeaders)
+
+	CleanupStack::PopAndDestroy( &addedElements );
+	if ( aHeaders )
 		{
-		TInt count(aHeaders->Count());
-		for (TInt i(0); i < count; ++i)
+		TInt count( aHeaders->Count( ) );
+		for ( TInt i( 0 ); i < count; ++i )
 			{
-			SetHeaderL(hdr, aHeaders->Key(i), aHeaders->Value(i));
+			SetHeaderL( hdr, aHeaders->Key( i ), aHeaders->Value( i ) );
 			}
 		}
 
-	if (aMethodIndex == HTTP::EPOST)
+	if ( aMethodIndex == HTTP::EPOST )
 		{
-		TBuf8<100> contentLength;
-		contentLength.Num(iOutputEncoder->OverallDataSize());
-		SetHeaderL(hdr, HTTP::EContentLength, contentLength);
-		SetHeaderL(hdr, HTTP::EContentType, KUrlEncodedContentType);
-		iTransaction.Request().SetBody(*iOutputEncoder);
+		TBuf8< 100 > contentLength;
+		contentLength.Num( iOutputEncoder->OverallDataSize( ) );
+		SetHeaderL( hdr, HTTP::EContentLength, contentLength );
+		SetHeaderL( hdr, HTTP::EContentType, KUrlEncodedContentType );
+		iTransaction.Request( ).SetBody( *iOutputEncoder );
 		}
-	iTransaction.SubmitL();
+	iTransaction.SubmitL( );
 	iState = EHttpActive;
 	}
 
-void CHttpController::GetL(const TDesC8& aUri, CHttpHeaders* aHeaders,
-		RWriteStream* aBodyFile)
+void CHttpController::GetL( const TDesC8& aUri, CHttpHeaders* aHeaders, RWriteStream* aBodyFile )
 	{
-	Cancel();
-	if (iOutputStream)
+	Cancel( );
+	if ( iOutputStream )
 		{
-		iOutputStream->Close();
+		iOutputStream->Close( );
 		}
 	iOutputStream = aBodyFile;
-	SendRequestL(HTTP::EGET, aUri, aHeaders);
+	SendRequestL( HTTP::EGET, aUri, aHeaders );
 	}
 
-void CHttpController::PostL(const TDesC8& aUri, CHttpHeaders* aHeaders,
-		RWriteStream* aBodyFile)
+void CHttpController::PostL( const TDesC8& aUri, CHttpHeaders* aHeaders, RWriteStream* aBodyFile )
 	{
-	Cancel();
-	if (iOutputStream)
+	Cancel( );
+	if ( iOutputStream )
 		{
-		iOutputStream->Close();
+		iOutputStream->Close( );
 		}
 	iOutputStream = aBodyFile;
-	SendRequestL(HTTP::EPOST, aUri, aHeaders);
+	SendRequestL( HTTP::EPOST, aUri, aHeaders );
 	}
 
-void CHttpController::AddPersistentHeaderL(TInt aHeaderId, const TDesC8& aValue)
+void CHttpController::AddPersistentHeaderL( TInt aHeaderId, const TDesC8& aValue )
 	{
-	RStringF string = iSession.StringPool().StringF(aHeaderId,
-			RHTTPSession::GetTable());
-	CleanupClosePushL(string);
-	iPersistentHeaders->AddL(string.DesC(), aValue);
-	CleanupStack::PopAndDestroy(&string);
+	RStringF string = iSession.StringPool( ).StringF( aHeaderId, RHTTPSession::GetTable( ) );
+	CleanupClosePushL( string );
+	iPersistentHeaders->AddL( string.DesC( ), aValue );
+	CleanupStack::PopAndDestroy( &string );
 	}
 
-void CHttpController::ResetPersistentHeaders()
+void CHttpController::ResetPersistentHeaders( )
 	{
-	iPersistentHeaders->Reset();
+	iPersistentHeaders->Reset( );
 	}
 
-void CHttpController::ParseHeadersL(RHTTPTransaction& aTransaction)
+void CHttpController::ParseHeadersL( RHTTPTransaction& aTransaction )
 	{
 	const TInt KMaxNumericLen = 32;
 
-	RStringPool stringPool = aTransaction.Session().StringPool();
-	RHTTPHeaders header = aTransaction.Response().GetHeaderCollection();
-	THTTPHdrFieldIter iterator = header.Fields();
+	RStringPool stringPool = aTransaction.Session( ).StringPool( );
+	RHTTPHeaders header = aTransaction.Response( ).GetHeaderCollection( );
+	THTTPHdrFieldIter iterator = header.Fields( );
 
 	HBufC8* fieldName8 = NULL;
 	HBufC8* fieldVal8 = NULL;
-	CHttpHeaders* headers = CHttpHeaders::NewLC();
-	while (!iterator.AtEnd())
+	CHttpHeaders* headers = CHttpHeaders::NewLC( );
+	while ( !iterator.AtEnd( ) )
 		{
-		RStringTokenF fieldName = iterator();
-		RStringF fieldNameStr = stringPool.StringF(fieldName);
+		RStringTokenF fieldName = iterator( );
+		RStringF fieldNameStr = stringPool.StringF( fieldName );
 		THTTPHdrVal fieldVal;
-		if (header.GetField(fieldNameStr, 0, fieldVal) == KErrNone)
+		if ( header.GetField( fieldNameStr, 0, fieldVal ) == KErrNone )
 			{
-			fieldName8 = fieldNameStr.DesC().AllocLC();
-			switch (fieldVal.Type())
+			fieldName8 = fieldNameStr.DesC( ).AllocLC( );
+			switch ( fieldVal.Type( ) )
 				{
 				case THTTPHdrVal::KTIntVal:
 					{
-					fieldVal8 = HBufC8::NewLC(KMaxNumericLen);
-					TPtr8 ptr(fieldVal8->Des());
-					ptr.Num(fieldVal.Int());
+					fieldVal8 = HBufC8::NewLC( KMaxNumericLen );
+					TPtr8 ptr( fieldVal8->Des( ) );
+					ptr.Num( fieldVal.Int( ) );
 					break;
 					}
 				case THTTPHdrVal::KStrFVal:
 					{
-					RStringF fieldValStr = stringPool.StringF(fieldVal.StrF());
-					fieldVal8 = fieldValStr.DesC().AllocLC();
+					RStringF fieldValStr = stringPool.StringF( fieldVal.StrF( ) );
+					fieldVal8 = fieldValStr.DesC( ).AllocLC( );
 					break;
 					}
 				case THTTPHdrVal::KStrVal:
 					{
-					RString fieldValStr = stringPool.String(fieldVal.Str());
-					fieldVal8 = fieldValStr.DesC().AllocLC();
+					RString fieldValStr = stringPool.String( fieldVal.Str( ) );
+					fieldVal8 = fieldValStr.DesC( ).AllocLC( );
 					break;
 					}
 				default:
 					User::Leave( KErrNotSupported );//new field types will be added in future
 					break;
 				}
-			if (!fieldVal8)
+			if ( !fieldVal8 )
 				{
-				CleanupStack::PopAndDestroy(fieldName8);
+				CleanupStack::PopAndDestroy( fieldName8 );
 				}
 			else
 				{
-				headers->AddL(*fieldName8, *fieldVal8);
-				CleanupStack::PopAndDestroy(2, fieldName8);
+				headers->AddL( *fieldName8, *fieldVal8 );
+				CleanupStack::PopAndDestroy( 2, fieldName8 );
 				}
 			fieldVal8 = NULL;
 			fieldName8 = NULL;
@@ -356,114 +345,111 @@ void CHttpController::ParseHeadersL(RHTTPTransaction& aTransaction)
 		++iterator;
 		}
 
-	iObserver->HeadersReceivedL(headers);
+	iObserver->HeadersReceivedL( headers );
 
-	CleanupStack::Pop(headers);
+	CleanupStack::Pop( headers );
 	}
 
-TInt CHttpController::ContentLength(RHTTPResponse& aResponse,
-		RHTTPSession& aSession)
+TInt CHttpController::ContentLength( RHTTPResponse& aResponse, RHTTPSession& aSession )
 	{
-	RStringF contetnLength = aSession.StringPool().StringF(
-			HTTP::EContentLength, RHTTPSession::GetTable());
-	RHTTPHeaders responseHeaders = aResponse.GetHeaderCollection();
+	RStringF contetnLength = aSession.StringPool( ).StringF( HTTP::EContentLength,
+			RHTTPSession::GetTable( ) );
+	RHTTPHeaders responseHeaders = aResponse.GetHeaderCollection( );
 	THTTPHdrVal contetnLengthValue;
-	TInt error(responseHeaders.GetField(contetnLength, 0, contetnLengthValue));
-	if (error == KErrNone)
+	TInt error( responseHeaders.GetField( contetnLength, 0, contetnLengthValue ) );
+	if ( error == KErrNone )
 		{
-		return contetnLengthValue.Int();
+		return contetnLengthValue.Int( );
 		}
 	return error;
 	}
 
-void CHttpController::MHFRunL(RHTTPTransaction aTransaction,
-		const THTTPEvent& aEvent)
+void CHttpController::MHFRunL( RHTTPTransaction aTransaction, const THTTPEvent& aEvent )
 	{
-	if (iState >= EHttpFinished)
+	if ( iState >= EHttpFinished )
 		{
-		if (iState == EHttpFinished)
+		if ( iState == EHttpFinished )
 			{
-			CloseTransaction(aTransaction);
-			Error(KErrCancel);
+			CloseTransaction( aTransaction );
+			Error( KErrCancel );
 			}
 		return;
 		}
 
-	switch (aEvent.iStatus)
+	switch ( aEvent.iStatus )
 		{
 		case THTTPEvent::EGotResponseHeaders:
 			{
-			RHTTPResponse responce = aTransaction.Response();
-			TInt httpStatus(responce.StatusCode());//text add
-			if (httpStatus / 100 != 2) //responce 200 - 299
+			RHTTPResponse responce = aTransaction.Response( );
+			TInt httpStatus( responce.StatusCode( ) );//text add
+			if ( httpStatus / 100 != 2 ) //responce 200 - 299
 				{
-				MHFRunError(KHttpErrorBase - httpStatus, aTransaction, aEvent);
+				MHFRunError( KHttpErrorBase - httpStatus, aTransaction, aEvent );
 				return;
 				}
-			ParseHeadersL(aTransaction);
-			if (!iOutputStream)
+			ParseHeadersL( aTransaction );
+			if ( !iOutputStream )
 				{
 				delete iResponseData;
 				iResponseData = NULL;
-				TInt len = ContentLength(responce, iSession);
-				iResponseData = HBufC8::NewL(len > 0 ? len : KMaxMemoryBuffer);
+				TInt len = ContentLength( responce, iSession );
+				iResponseData = HBufC8::NewL( len > 0 ? len : KMaxMemoryBuffer );
 				}
 			break;
 			}
 		case THTTPEvent::EGotResponseBodyData:
 			{
-			MHTTPDataSupplier* body = aTransaction.Response().Body();
+			MHTTPDataSupplier* body = aTransaction.Response( ).Body( );
 
 			TPtrC8 dataPart;
-			body->GetNextDataPart(dataPart);
+			body->GetNextDataPart( dataPart );
 
-			if (iOutputStream)
+			if ( iOutputStream )
 				{
-				iOutputStream->WriteL(dataPart);
+				iOutputStream->WriteL( dataPart );
 				}
 			else
 				{
-				TInt bufLength(iResponseData->Des().Length());
-				TInt maxBufLength(iResponseData->Des().MaxLength());
-				if (bufLength + dataPart.Length() > maxBufLength)
+				TInt bufLength( iResponseData->Des( ).Length( ) );
+				TInt maxBufLength( iResponseData->Des( ).MaxLength( ) );
+				if ( bufLength + dataPart.Length( ) > maxBufLength )
 					{
-					iResponseData = iResponseData->ReAllocL(bufLength
-							+ dataPart.Length());
+					iResponseData = iResponseData->ReAllocL( bufLength + dataPart.Length( ) );
 					}
-				iResponseData->Des().Append(dataPart);
+				iResponseData->Des( ).Append( dataPart );
 				}
-			body->ReleaseData();
+			body->ReleaseData( );
 			break;
 			}
 		case THTTPEvent::EResponseComplete:
 			{
-			TInt httpStatus(aTransaction.Response().StatusCode());
-			if (httpStatus / 100 != 2)
+			TInt httpStatus( aTransaction.Response( ).StatusCode( ) );
+			if ( httpStatus / 100 != 2 )
 				{
-				MHFRunError(KHttpErrorBase - httpStatus, aTransaction, aEvent);
+				MHFRunError( KHttpErrorBase - httpStatus, aTransaction, aEvent );
 				return;
 				}
-			if (iOutputStream)
+			if ( iOutputStream )
 				{
 
 				}
 			iState = EHttpFinished;
-			aTransaction.Close();
-			if (iOutputStream)
+			aTransaction.Close( );
+			if ( iOutputStream )
 				{
-				iOutputStream->CommitL();
-				iOutputStream->Close();
+				iOutputStream->CommitL( );
+				iOutputStream->Close( );
 				iOutputStream = NULL;
-				iObserver->StreamReceived();
+				iObserver->StreamReceived( );
 				}
 			else
 				{
-				iObserver->ContentReceived(iResponseData);
+				iObserver->ContentReceived( iResponseData );
 				iResponseData = NULL;
 				}
 			delete iResponseData;
 			iResponseData = NULL;
-			iObserver->TransactionSucceeded();
+			iObserver->TransactionSucceeded( );
 			iState = EHttpNotified;
 			break;
 			}
@@ -471,35 +457,35 @@ void CHttpController::MHFRunL(RHTTPTransaction aTransaction,
 			break;
 		case THTTPEvent::EFailed:
 			{
-			CloseTransaction(aTransaction);
-			iObserver->Error(KErrGeneral);
+			CloseTransaction( aTransaction );
+			iObserver->Error( KErrGeneral );
 			iState = EHttpNotified;
 			break;
 			}
 		default:
 			{
-			if (aEvent.iStatus < 0)
+			if ( aEvent.iStatus < 0 )
 				{
-				CloseTransaction(aTransaction);
-				iObserver->Error(aEvent.iStatus);
+				CloseTransaction( aTransaction );
+				iObserver->Error( aEvent.iStatus );
 				iState = EHttpNotified;
 				}
-			}
 			break;
+			}
+
 		}
 	}
 
-TInt CHttpController::MHFRunError(TInt aError, RHTTPTransaction aTransaction,
-		const THTTPEvent& /*aEvent*/)
+TInt CHttpController::MHFRunError( TInt aError, RHTTPTransaction aTransaction, const THTTPEvent& /*aEvent*/)
 	{
-	CloseTransaction(aTransaction);
-	Error(aError);
+	CloseTransaction( aTransaction );
+	Error( aError );
 	return KErrNone;
 	}
 
-void CHttpController::Cancel()
+void CHttpController::Cancel( )
 	{
-	if (iState > EHttpFinished)
+	if ( iState > EHttpFinished )
 		{
 		iState = EHttpFinished;
 		}
@@ -507,18 +493,17 @@ void CHttpController::Cancel()
 		{
 		if ( iState == EHttpActive )
 			{
-			CloseTransaction(iTransaction);
+			CloseTransaction( iTransaction );
 			}
 		}
 	}
 
-HBufC8* CHttpController::HeaderNameLC(TInt aId)
+HBufC8* CHttpController::HeaderNameLC( TInt aId )
 	{
-	RStringF string = iSession.StringPool().StringF(aId,
-			RHTTPSession::GetTable());
-	CleanupClosePushL(string);
-	HBufC8* buffer = string.DesC().AllocL();
-	CleanupStack::PopAndDestroy(&string);
-	CleanupDeletePushL(buffer);
+	RStringF string = iSession.StringPool( ).StringF( aId, RHTTPSession::GetTable( ) );
+	CleanupClosePushL( string );
+	HBufC8* buffer = string.DesC( ).AllocL( );
+	CleanupStack::PopAndDestroy( &string );
+	CleanupDeletePushL( buffer );
 	return buffer;
 	}

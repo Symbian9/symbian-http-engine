@@ -25,6 +25,7 @@
 * 
 * Initial Contributors:
 * Pawe³ Polañski - Initial contribution
+* Tomasz Polañski
 *
 * Contributors:
 *
@@ -47,7 +48,7 @@
 
 class CMultipartFieldBase;
 
-class CMultipartEncoder: public CHttpDataEncoderBase
+class CMultipartEncoder: public CBase, public MHttpDataEncoderBase
 	{
 public:
 	~CMultipartEncoder();

@@ -25,6 +25,7 @@
 * 
 * Initial Contributors:
 * Pawe³ Polañski - Initial contribution
+* Tomasz Polañski
 *
 * Contributors:
 *
@@ -40,7 +41,7 @@ inline void CHttpController::SetObserver( MHttpObserver& aObserver )
 	iObserver = &aObserver;
 	}
 
-inline CHttpDataEncoderBase& CHttpController::ContentEncoder() const
+inline MHttpDataEncoderBase& CHttpController::ContentEncoder() const
 	{
 	return *iOutputEncoder;
 	}

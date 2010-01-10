@@ -25,6 +25,7 @@
 * 
 * Initial Contributors:
 * Pawe³ Polañski - Initial contribution
+* Tomasz Polañski
 *
 * Contributors:
 *

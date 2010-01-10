@@ -25,6 +25,7 @@
 * 
 * Initial Contributors:
 * Pawe³ Polañski - Initial contribution
+* Tomasz Polañski
 *
 * Contributors:
 *
@@ -40,25 +41,12 @@
 #define HTTPDATAENCODERBASE_H
 
 // INCLUDES
-#include <e32std.h>
-#include <e32base.h>
 #include <MHTTPDataSupplier.h>
 
-class CHttpDataEncoderBase: public MHTTPDataSupplier
+class MHttpDataEncoderBase: public MHTTPDataSupplier
 	{
 public:
-	virtual ~CHttpDataEncoderBase(){};
-
 	virtual void ResetEncoderL() = 0;
-	
-public: //from MHTTPDataSupplier
-	TBool GetNextDataPart(TPtrC8& aDataPart) = 0;
-	void ReleaseData() = 0;
-	TInt OverallDataSize() = 0;
-	TInt Reset() = 0;
-
-protected:
-	CHttpDataEncoderBase(){};
 	};
 
 #endif // HTTPDATAENCODERBASE_H
