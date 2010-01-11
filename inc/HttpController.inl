@@ -41,7 +41,7 @@ inline void CHttpController::SetObserver( MHttpObserver& aObserver )
 	iObserver = &aObserver;
 	}
 
-inline MHttpDataEncoderBase& CHttpController::ContentEncoder() const
+inline XHttpDataEncoderBase& CHttpController::ContentEncoder() const
 	{
 	return *iOutputEncoder;
 	}

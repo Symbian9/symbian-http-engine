@@ -48,7 +48,7 @@
 
 class CMultipartFieldBase;
 
-class CMultipartEncoder: public CBase, public MHttpDataEncoderBase
+class CMultipartEncoder: public CBase, public XHttpDataEncoderBase
 	{
 public:
 	~CMultipartEncoder();
@@ -58,7 +58,6 @@ public:
 	
 	void AddFieldL( CMultipartFieldBase* aField ); //passes ownership
 	
-public: //from base
 	TBool GetNextDataPart(TPtrC8& aDataPart);
 	void ReleaseData();
 	TInt OverallDataSize();

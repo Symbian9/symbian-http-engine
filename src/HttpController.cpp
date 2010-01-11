@@ -42,6 +42,9 @@
 #include "HttpObserver.h"
 #include "MultipartEncoder.h"
 #include "HttpHeader.h"
+
+#include <utf.h>
+
 _LIT8( KUserAgent, "SymbianOS" );
 _LIT8( KContentType, "multipart/form-data; boundary=" KBoundryId );
 _LIT8( KUrlEncodedContentType, "application/x-www-form-urlencoded" );
@@ -50,7 +53,7 @@ _LIT8( KClose, "Close" );
 
 const TInt KMaxMemoryBuffer = 0x10000;
 
-CHttpController::CHttpController( MHttpDataEncoderBase* aContentEncoder ) :
+CHttpController::CHttpController( XHttpDataEncoderBase* aContentEncoder ) :
 	iOutputEncoder( aContentEncoder )
 	{
 	}
@@ -70,7 +73,7 @@ CHttpController::~CHttpController( )
 	}
 
 CHttpController* CHttpController::NewLC( RConnection& aConnection, RSocketServ& aSocketServ,
-		MHttpDataEncoderBase* aContentEncoder )
+		XHttpDataEncoderBase* aContentEncoder )
 	{
 	CHttpController* self = new ( ELeave ) CHttpController( aContentEncoder );
 	CleanupStack::PushL( self );
@@ -79,7 +82,7 @@ CHttpController* CHttpController::NewLC( RConnection& aConnection, RSocketServ& 
 	}
 
 CHttpController* CHttpController::NewL( RConnection& aConnection, RSocketServ& aSocketServ,
-		MHttpDataEncoderBase* aContentEncoder )
+		XHttpDataEncoderBase* aContentEncoder )
 	{
 	CHttpController* self = CHttpController::NewLC( aConnection, aSocketServ, aContentEncoder );
 	CleanupStack::Pop( self );
@@ -241,7 +244,8 @@ void CHttpController::SendRequestL( TInt aMethodIndex, const TDesC8& aUri, CHttp
 
 	if ( aMethodIndex == HTTP::EPOST )
 		{
-		TBuf8< 100 > contentLength;
+		const TInt KMaxContentLenBufferLength = 100;
+		TBuf8< KMaxContentLenBufferLength > contentLength;
 		contentLength.Num( iOutputEncoder->OverallDataSize( ) );
 		SetHeaderL( hdr, HTTP::EContentLength, contentLength );
 		SetHeaderL( hdr, HTTP::EContentType, KUrlEncodedContentType );
@@ -326,6 +330,18 @@ void CHttpController::ParseHeadersL( RHTTPTransaction& aTransaction )
 					fieldVal8 = fieldValStr.DesC( ).AllocLC( );
 					break;
 					}
+				case THTTPHdrVal::KDateVal:
+					{ 
+					_LIT(KDateFormat,"%D%M%Y%/0%1%/1%2%/2%3%/3 %:0%H%:1%T%:2%S.%C%:3");
+					TDateTime date = fieldVal.DateTime();
+					const TInt KMaxDateBuferLength = 100;
+	                TBuf<KMaxDateBuferLength> dateBuffer;
+	                TTime time( date );
+	                time.FormatL( dateBuffer, KDateFormat );
+	                fieldVal8 = CnvUtfConverter::ConvertFromUnicodeToUtf8L( dateBuffer );
+	                CleanupDeletePushL( fieldVal8 );
+	                break;
+					}
 				default:
 					User::Leave( KErrNotSupported );//new field types will be added in future
 					break;
@@ -381,7 +397,7 @@ void CHttpController::MHFRunL( RHTTPTransaction aTransaction, const THTTPEvent& 
 		case THTTPEvent::EGotResponseHeaders:
 			{
 			RHTTPResponse responce = aTransaction.Response( );
-			TInt httpStatus( responce.StatusCode( ) );//text add
+			TInt httpStatus( responce.StatusCode( ) );
 			if ( httpStatus / 100 != 2 ) //responce 200 - 299
 				{
 				MHFRunError( KHttpErrorBase - httpStatus, aTransaction, aEvent );

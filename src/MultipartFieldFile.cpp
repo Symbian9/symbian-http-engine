@@ -100,14 +100,18 @@ TBool CMultipartFieldFile::ReturnNextDataPart( TDes8& aDataPart )
 	HBufC8* buffer = HBufC8::New( maxAmount );
 	if ( !buffer )
 		{
+#ifdef __INFO_PRINTS__
 		User::InfoPrint( _L("Buffer error") );
+#endif
 		return ETrue;
 		}
 	TPtr8 ptr( buffer->Des( ) );
 	TRAPD( error, iFile.ReadL( ptr, Min( (iSize - iOffset), maxAmount ) ) );
 	if ( error != KErrEof && error != KErrNone )
 		{
+#ifdef __INFO_PRINTS__
 		User::InfoPrint( _L("File error") );
+#endif
 		delete buffer;
 		return ETrue;
 		}

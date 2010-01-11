@@ -1,6 +1,8 @@
 TARGET				HttpEngine.lib
 TARGETTYPE			lib
 
+macro __INFO_PRINTS__
+
 USERINCLUDE	 		..\inc
 SYSTEMINCLUDE 		\epoc32\include \epoc32\include\http
 

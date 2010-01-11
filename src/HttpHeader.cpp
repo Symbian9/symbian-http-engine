@@ -66,20 +66,23 @@ CHttpHeaders* CHttpHeaders::NewL( )
 
 void CHttpHeaders::ConstructL( )
 	{
-	iKeyArray = new ( ELeave ) CDesC8ArrayFlat( 10 );
-	iValueArray = new ( ELeave ) CDesC8ArrayFlat( 10 );
+	const TInt KDefaultArraySize = 10;
+	iKeyArray = new ( ELeave ) CDesC8ArrayFlat( KDefaultArraySize );
+	iValueArray = new ( ELeave ) CDesC8ArrayFlat( KDefaultArraySize );
 	}
 
 void CHttpHeaders::AddL( const TDesC8& aKey, const TInt& aValue )
 	{
-	TBuf8< 20 > buf;
+	const TInt KMaxBuffLen = 20;
+	TBuf8< KMaxBuffLen > buf;
 	buf.Num( aValue );
 	AddL( aKey, buf );
 	}
 
 void CHttpHeaders::AddL( const TDesC8& aKey, const TInt64& aValue )
 	{
-	TBuf8< 40 > buf;
+	const TInt KMaxBuffLen = 40;
+	TBuf8< KMaxBuffLen > buf;
 	buf.Num( aValue );
 	AddL( aKey, buf );
 	}

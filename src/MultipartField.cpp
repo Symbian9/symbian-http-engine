@@ -67,8 +67,8 @@ void CMultipartFieldPlain::ConstructL( const TDesC8& aFieldName, const TDesC8& a
 	{
 	CMultipartFieldBase::SetFieldNameL( aFieldName );
 	iContent.CreateL( KContentStart( ).Size( ) + aContent.Size( ) );
-	iContent = KContentStart;
-	iContent += aContent;
+	iContent.Copy( KContentStart );
+	iContent.Append( aContent );
 	}
 
 TBool CMultipartFieldPlain::ReturnNextDataPart( TDes8& aDataPart )

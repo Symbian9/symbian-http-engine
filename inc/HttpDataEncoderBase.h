@@ -43,9 +43,12 @@
 // INCLUDES
 #include <MHTTPDataSupplier.h>
 
-class MHttpDataEncoderBase: public MHTTPDataSupplier
+//this is named X class as this ia a M class that has destructor
+
+class XHttpDataEncoderBase: public MHTTPDataSupplier
 	{
 public:
+	virtual ~XHttpDataEncoderBase(){};
 	virtual void ResetEncoderL() = 0;
 	};
 

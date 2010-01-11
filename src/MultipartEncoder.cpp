@@ -74,14 +74,15 @@ void CMultipartEncoder::ConstructL( )
 	{
 	TInt error( KErrNoMemory );
 	TInt bufferSize( KDefaultBufferSize );
-	TInt i( 5 );
+	const TInt KMaxAttamptCount = 5;
+	TInt i( 0 );
 	do
 		{
 		iData.Close( );
 		error = iData.Create( bufferSize );
 		bufferSize /= 2;
 		}
-	while ( error && --i );
+	while ( error && ++i >= KMaxAttamptCount );
 	User::LeaveIfError( error );
 	}
 
@@ -101,35 +102,21 @@ void CMultipartEncoder::AddFieldL( CMultipartFieldBase* aField )
 
 TBool CMultipartEncoder::GetNextDataPart( TPtrC8& aDataPart )
 	{
-	__ASSERT_ALWAYS( iFieldArray.Count()> iCurrentField, User::Panic( _L("Field"), KErrUnderflow ) );
+	__ASSERT_DEBUG( iFieldArray.Count()> iCurrentField, User::Panic( _L("Field"), KErrUnderflow ) );
 	if ( !iHasData )
 		{
-		iData = KLastBoundary;
-		iData += iCurrentField ? KNextBoundary( ) : KStartBoundary( );
+		iData.Copy( KLastBoundary );
+		iData.Append( iCurrentField ? KNextBoundary( ) : KStartBoundary( ) );
 		iSavedResponse = iFieldArray[ iCurrentField ]->GetNextDataPart( iData );
 		iData.Delete( 0, KLastBoundary( ).Length( ) );
 		if ( iCurrentField + 1 >= iFieldArray.Count( ) && iSavedResponse )
 			{
-			iData += KLastBoundary;
+			iData.Append( KLastBoundary );
 			}
 
 		iHasData = ETrue;
 		}
 	aDataPart.Set( iData );
-	/*	TInt sizzz( aDataPart.Size() );
-	 RFs fs;
-	 fs.Connect();
-	 RFile file;//TODO remove
-	 TInt error( file.Replace( fs, _L("c:\\Data\\sss.txt"), EFileWrite ) );
-	 User::LeaveIfError( error );
-	 CleanupClosePushL( file );
-	 TInt position = 0;
-	 User::LeaveIfError( file.Seek( ESeekEnd, position ) );
-	 TTime timeee;
-	 timeee.UniversalTime();
-	 User::LeaveIfError( file.Write( aDataPart ) );
-	 CleanupStack::PopAndDestroy( &file );
-	 fs.Close();*/
 	return iCurrentField + 1 >= iFieldArray.Count( ) && iSavedResponse;
 	}
 

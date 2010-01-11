@@ -49,7 +49,7 @@
 #include <http/rhttpsession.h> 
 
 class CHttpHeaders;
-class MHttpDataEncoderBase;
+class XHttpDataEncoderBase;
 class RWriteStream;
 class MHttpObserver;
 
@@ -65,10 +65,10 @@ public:
 	//id content encoder is not specyfied then the default CMultipartEncoder is used
 	static CHttpController
 			* NewL( RConnection& aConnection, RSocketServ& aSocketServ,
-					MHttpDataEncoderBase* aContentEncoder = NULL ); //passes ownership of aContentEncoder
+					XHttpDataEncoderBase* aContentEncoder = NULL ); //passes ownership of aContentEncoder
 	static CHttpController
 			* NewLC( RConnection& aConnection, RSocketServ& aSocketServ,
-					MHttpDataEncoderBase* aContentEncoder = NULL ); //passes ownership of aContentEncoder
+					XHttpDataEncoderBase* aContentEncoder = NULL ); //passes ownership of aContentEncoder
 
 public:
 	void GetL( const TDesC8& aUri, CHttpHeaders* aHeaders = NULL,
@@ -83,7 +83,7 @@ public:
 	void ResetPersistentHeaders();
 
 	inline void SetObserver( MHttpObserver& aObserver );
-	inline MHttpDataEncoderBase& ContentEncoder() const;
+	inline XHttpDataEncoderBase& ContentEncoder() const;
 
 protected:
 	void SetHeaderL( RHTTPHeaders& aHeaders, TInt aHdrField,
@@ -108,7 +108,7 @@ protected: //from MHTTPTransactionCallback
 					  const THTTPEvent& aEvent );
 
 private:
-	CHttpController( MHttpDataEncoderBase* aContentEncoder );
+	CHttpController( XHttpDataEncoderBase* aContentEncoder );
 	void ConstructL( RConnection& aConnection, RSocketServ& aSocketServ );
 
 	enum THttpState
@@ -123,7 +123,7 @@ private:
 	MHttpObserver* iObserver;
 
 	HBufC8* iResponseData;
-	MHttpDataEncoderBase* iOutputEncoder;
+	XHttpDataEncoderBase* iOutputEncoder;
 
 	RHTTPSession iSession;
 	RHTTPTransaction iTransaction;
