@@ -15,7 +15,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ''AS IS'' 
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL PIOTR WACH, POLIDEA BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL PAWE£ POLAÑSKI BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -37,40 +37,38 @@
  */
 #include "MultipartEncoder.h"
 #include "MultipartFieldBase.h"
-
-
 _LIT8(KStartBoundary, "--" KBoundryId "\r\n" );
 _LIT8(KNextBoundary, "\r\n--" KBoundryId "\r\n" );
 _LIT8(KLastBoundary, "\r\n--" KBoundryId "--\r\n");
 
 const TInt KDefaultBufferSize = 0x5000;
 
-CMultipartEncoder::CMultipartEncoder( )
+CMultipartEncoder::CMultipartEncoder()
 	{
 	}
 
-CMultipartEncoder::~CMultipartEncoder( )
+CMultipartEncoder::~CMultipartEncoder()
 	{
-	iData.Close( );
-	iFieldArray.ResetAndDestroy( );
+	iData.Close();
+	iFieldArray.ResetAndDestroy();
 	}
 
-CMultipartEncoder* CMultipartEncoder::NewLC( )
+CMultipartEncoder* CMultipartEncoder::NewLC()
 	{
-	CMultipartEncoder* self = new ( ELeave ) CMultipartEncoder( );
+	CMultipartEncoder* self = new ( ELeave ) CMultipartEncoder();
 	CleanupStack::PushL( self );
-	self->ConstructL( );
+	self->ConstructL();
 	return self;
 	}
 
-CMultipartEncoder* CMultipartEncoder::NewL( )
+CMultipartEncoder* CMultipartEncoder::NewL()
 	{
-	CMultipartEncoder* self = CMultipartEncoder::NewLC( );
+	CMultipartEncoder* self = CMultipartEncoder::NewLC();
 	CleanupStack::Pop( self );
 	return self;
 	}
 
-void CMultipartEncoder::ConstructL( )
+void CMultipartEncoder::ConstructL()
 	{
 	TInt error( KErrNoMemory );
 	TInt bufferSize( KDefaultBufferSize );
@@ -78,7 +76,7 @@ void CMultipartEncoder::ConstructL( )
 	TInt i( 0 );
 	do
 		{
-		iData.Close( );
+		iData.Close();
 		error = iData.Create( bufferSize );
 		bufferSize /= 2;
 		}
@@ -86,10 +84,10 @@ void CMultipartEncoder::ConstructL( )
 	User::LeaveIfError( error );
 	}
 
-void CMultipartEncoder::ResetEncoderL( )
+void CMultipartEncoder::ResetEncoderL()
 	{
-	iData.Zero( );
-	iFieldArray.ResetAndDestroy( );
+	iData.Zero();
+	iFieldArray.ResetAndDestroy();
 	iCurrentField = 0;
 	iHasData = EFalse;
 	iSavedResponse = EFalse;
@@ -102,14 +100,14 @@ void CMultipartEncoder::AddFieldL( CMultipartFieldBase* aField )
 
 TBool CMultipartEncoder::GetNextDataPart( TPtrC8& aDataPart )
 	{
-	__ASSERT_DEBUG( iFieldArray.Count()> iCurrentField, User::Panic( _L("Field"), KErrUnderflow ) );
+	__ASSERT_DEBUG( iFieldArray.Count() > iCurrentField, User::Panic( _L("Field"), KErrUnderflow ) );
 	if ( !iHasData )
 		{
 		iData.Copy( KLastBoundary );
-		iData.Append( iCurrentField ? KNextBoundary( ) : KStartBoundary( ) );
-		iSavedResponse = iFieldArray[ iCurrentField ]->GetNextDataPart( iData );
-		iData.Delete( 0, KLastBoundary( ).Length( ) );
-		if ( iCurrentField + 1 >= iFieldArray.Count( ) && iSavedResponse )
+		iData.Append( iCurrentField ? KNextBoundary() : KStartBoundary() );
+		iSavedResponse = iFieldArray[iCurrentField]->GetNextDataPart( iData );
+		iData.Delete( 0, KLastBoundary().Length() );
+		if ( iCurrentField + 1 >= iFieldArray.Count() && iSavedResponse )
 			{
 			iData.Append( KLastBoundary );
 			}
@@ -117,47 +115,53 @@ TBool CMultipartEncoder::GetNextDataPart( TPtrC8& aDataPart )
 		iHasData = ETrue;
 		}
 	aDataPart.Set( iData );
-	return iCurrentField + 1 >= iFieldArray.Count( ) && iSavedResponse;
+	return iCurrentField + 1 >= iFieldArray.Count() && iSavedResponse;
 	}
 
-void CMultipartEncoder::ReleaseData( )
+void CMultipartEncoder::ReleaseData()
 	{
-	iFieldArray[ iCurrentField++ ]->ReleaseData( );
+	iFieldArray[iCurrentField++]->ReleaseData();
 	}
 
-TInt CMultipartEncoder::OverallDataSize( )
+TInt CMultipartEncoder::OverallDataSize()
 	{
 	if ( iWholeSize )
 		{
 		return iWholeSize;
 		}
-	for ( TInt i( 0 ); i < iFieldArray.Count( ); ++i )
+	for ( TInt i( 0 ); i < iFieldArray.Count(); ++i )
 		{
-		iWholeSize += iFieldArray[ i ]->OverallDataSize( );
+		iWholeSize += iFieldArray[i]->OverallDataSize();
 		}
-	iWholeSize += KStartBoundary( ).Size( ) + KNextBoundary( ).Size( )
-			* ( iFieldArray.Count( ) > 1 ? iFieldArray.Count( ) - 1 : 0 ) + KLastBoundary( ).Size( );
+	iWholeSize += KStartBoundary().Size() + KNextBoundary().Size()
+			* ( iFieldArray.Count() > 1 ? iFieldArray.Count() - 1 : 0 ) + KLastBoundary().Size();
 	return iWholeSize;
 	}
 
-TInt CMultipartEncoder::Reset( )
+TInt CMultipartEncoder::Reset()
 	{
 	TInt error( KErrNone );
 	for ( TInt i( iCurrentField ); i >= 0; --i )
 		{
-		if ( iFieldArray.Count( ) > i )
+		if ( iFieldArray.Count() > i )
 			{
-			error = iFieldArray[ i ]->Reset( );
+			error = iFieldArray[i]->Reset();
 			if ( error )
 				{
 				return error;
 				}
 			}
 		}
-	iData.Zero( );
+	iData.Zero();
 	iHasData = EFalse;
 	iCurrentField = 0;
 	iSavedResponse = EFalse;
 	iWholeSize = 0;
 	return error;
+	}
+
+const TDesC8& CMultipartEncoder::Name()
+	{
+	_LIT8( KMultipartEncoderName, "MultipartEncoder" );
+	return KMultipartEncoderName;
 	}

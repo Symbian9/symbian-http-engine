@@ -15,7 +15,7 @@
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ''AS IS'' 
 * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL PIOTR WACH, POLIDEA BE LIABLE FOR ANY
+* DISCLAIMED. IN NO EVENT SHALL PAWE£ POLAÑSKI BE LIABLE FOR ANY
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -81,7 +81,9 @@ public:
 
 	void AddPersistentHeaderL( TInt aHeaderId, const TDesC8& aValue );
 	void ResetPersistentHeaders();
-
+	
+	inline void SetTimeout( TInt aTimeoutValue ); //timeout in seconds
+	inline TInt Timeout() const;
 	inline void SetObserver( MHttpObserver& aObserver );
 	inline XHttpDataEncoderBase& ContentEncoder() const;
 
@@ -91,7 +93,7 @@ protected:
 	void SetHeaderL( RHTTPHeaders& aHeaders, const TDesC8& aHdrName,
 					 const TDesC8& aHdrValue );
 
-	TInt ContentLength( RHTTPResponse& aResponse, RHTTPSession& aSession );
+	TInt ContentLength( RHTTPHeaders aHeaderCollection, RHTTPSession& aSession );
 
 	void SendRequestL( TInt aMethodIndex, const TDesC8& aUri );
 	void SendRequestL( TInt aMethodIndex, const TDesC8& aUri,
@@ -118,19 +120,40 @@ private:
 		EHttpFinished, 
 		EHttpNotified
 		};
+	
+private:
+	static TInt TimeoutEntry( TAny* aOwner );
+	
+	void TimeoutL();
+	
+	void StartTimeout();
+	
+	void CheckStatusCodeL( RHTTPTransaction& aTransaction );
+	void ProcessResponseHeadersL( RHTTPTransaction& aTransaction );
+	void ProcessResponseBodyDataL( RHTTPTransaction& aTransaction );
+	void ProcessResponseCompleteL( RHTTPTransaction& aTransaction );
+	
+	void Error( RHTTPTransaction& aTransaction, TInt aError );
+	
+	void SetHeaderL( TInt aHeaderId, RHTTPHeaders& aHeaders,
+					const TDesC8& aHdrDefaultValue, RArray< TInt >& aAddedElements );
 
 private:
-	MHttpObserver* iObserver;
+	MHttpObserver* 			iObserver;//not owned
 
-	HBufC8* iResponseData;
-	XHttpDataEncoderBase* iOutputEncoder;
+	HBufC8* 				iResponseData;
+	XHttpDataEncoderBase* 	iOutputEncoder;
 
-	RHTTPSession iSession;
-	RHTTPTransaction iTransaction;
-	THttpState iState;
-	RWriteStream* iOutputStream;
+	RHTTPSession 			iSession;
+	RHTTPTransaction 		iTransaction;
+	
+	THttpState 				iState;
+	RWriteStream*			iOutputStream;
 
-	CHttpHeaders* iPersistentHeaders;
+	CHttpHeaders* 			iPersistentHeaders;
+	
+	CPeriodic*				iTimeoutTimer;
+	TInt					iTimeoutValue; //timeout time in seconds
 	};
 
 #include "HttpController.inl"
